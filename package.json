@@ -1,0 +1,15 @@
+{
+  "name": "tstemplate",
+  "version": "1.0.0",
+  "description": "basic template for ts coding challenges",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "tal",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^8.0.12",
+    "@types/request": "0.0.46"
+  }
+}
