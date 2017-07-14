@@ -1,11 +1,24 @@
 import request = require('request');
+import readline = require('readline');
 import { Bus } from "./bus";
 
 export class Template {
 
     public run(): void {
-        const requestPromise = new Promise((resolve, reject) => {
-            request('https://api.tfl.gov.uk/StopPoint/490008660N/Arrivals?app_id=1aeb84cc&app_key=8319a3e05b400574fdc7d0db5b0d3bfb', function (error, response, body) {
+        const rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout
+        });
+        rl.on('line', (input: string) => {
+            if (input.startsWith("Print Buses ")) {
+                this.printNextBuses(input.substring(12));
+            }
+        });
+    }
+
+    private printNextBuses(stopCode: string) {
+         const requestPromise = new Promise((resolve, reject) => {
+            request('https://api.tfl.gov.uk/StopPoint/'+stopCode+'/Arrivals?app_id=1aeb84cc&app_key=8319a3e05b400574fdc7d0db5b0d3bfb', function (error, response, body) {
                 if (error) {
                     reject(error);
                 } else {
@@ -27,7 +40,7 @@ export class Template {
             let bus = new Bus(busData["id"], busData["operationType"], busData["vehicleId"], busData["lineId"], busData["lineName"], busData["platformName"], busData["direction"], busData["bearing"], busData["destinationNaptanId"],busData["destinationName"], busData["timeToStation"], busData["expectedArrival"], busData["towards"]);
             busList[i] = bus;
         }
-        console.log(busList);
+        //console.log(busList);
         return busList;
     }
 
