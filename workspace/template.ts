@@ -28,10 +28,15 @@ export class Template {
                 }
             });
         })
-        requestPromise.then((body)=>{
-
-            this.getStops(this.returnLongLat(body));
-        });
+        requestPromise
+            .then((body)=>{
+                const longLat: number[] = this.returnLongLat(body);
+                const stopsPromise = this.getStopsPromise(longLat);
+                stopsPromise
+                    .catch((err)=>console.log(err))
+                    .then((body)=>this.printStopsAndBuses(body as string));
+            })
+            .catch((err)=>(console.log(err)));
     }
 
     private returnLongLat(body):number[]
@@ -44,9 +49,9 @@ export class Template {
 
     }
 
-    private getStops(longLat: number[]):void
+    private getStopsPromise(longLat: number[]): Promise<string>
     {
-        const requestPromise = new Promise((resolve, reject) => {
+        const requestPromise = new Promise<string>((resolve, reject) => {
             request('https://api.tfl.gov.uk/StopPoint?stopTypes=NaptanPublicBusCoachTram&radius=200&useStopPointHierarchy=false&modes=bus&returnLines=false&lat='+longLat[1].toString()+'&lon='+longLat[0].toString()+'&app_id=1aeb84cc&app_key=8319a3e05b400574fdc7d0db5b0d3bfb', function(error, response, body) {
                 if (error) {
                     reject(error);
@@ -55,10 +60,11 @@ export class Template {
                 }
             })
         });
-        requestPromise.then((body)=>this.getClosest(body));
+        return requestPromise;
+        
     }
 
-    private getClosest(body) {
+    private printStopsAndBuses(body: string): void {
         const data = JSON.parse(body);
         for (let i = 0; i < 2; i++) {
             if (i >= data["stopPoints"].length) {
@@ -67,18 +73,17 @@ export class Template {
             } else {
                 const stop = data["stopPoints"][i];
                 const busPromise = this.getBusRequest(stop["id"]);
-                busPromise.then((body) => {
-                    console.log(stop["commonName"]+" at "+stop["distance"].toString()+" meters away");
-                    this.printBuses(body);
-                })
-                
-                //this.printNextBuses(stop["id"]);
+                busPromise
+                    .then((body) => {
+                        console.log(stop["commonName"]+" at "+stop["distance"].toString()+" meters away");
+                        this.printBuses(body);
+                    })
+                    .catch((err)=>console.log(err));
             }
         }
     }
 
-    private printBuses(body):void{
-        //console.log(body);
+    private printBuses(body: string):void{
         const buses: Bus[] = this.parseJsonBus(body);
         const quickest: Bus[] = this.quickestFive(buses);
         for (let i = 0; i< quickest.length; i++) {
@@ -86,17 +91,17 @@ export class Template {
         }
     }
 
-    private printNextBuses(stopCode: string) {
+    private printNextBuses(stopCode: string): void {
         const busPromise = this.getBusRequest(stopCode);
 
         busPromise
             .then((body)=>this.printBuses(body))
-            .catch(console.log);
+            .catch((err) =>console.log(err));
         
     }
 
-    private getBusRequest(stopCode: string): Promise<Bus[]> {
-         const requestPromise = new Promise<Bus[]> ((resolve, reject) => {
+    private getBusRequest(stopCode: string): Promise<string> {
+         const requestPromise = new Promise<string> ((resolve, reject) => {
             request('https://api.tfl.gov.uk/StopPoint/'+stopCode+'/Arrivals?app_id=1aeb84cc&app_key=8319a3e05b400574fdc7d0db5b0d3bfb', function (error, response, body) {
                 if (error) {
                     reject(error);
@@ -109,17 +114,15 @@ export class Template {
         return requestPromise;
     }
 
-    private parseJsonBus(body): Bus[] {
+    private parseJsonBus(body: string): Bus[] {
         const data = JSON.parse(body);
         let busList: Bus[] = [];
-        //console.log(body);
         for(let i = 0; i < data.length; i ++)
         {
             let busData = data[i];
             let bus = new Bus(busData["id"], busData["operationType"], busData["vehicleId"], busData["lineId"], busData["lineName"], busData["platformName"], busData["direction"], busData["bearing"], busData["destinationNaptanId"],busData["destinationName"], busData["timeToStation"], busData["expectedArrival"], busData["towards"]);
             busList[i] = bus;
         }
-        //console.log(busList);
         return busList;
     }
 

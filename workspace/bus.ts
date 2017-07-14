@@ -34,6 +34,6 @@ export class Bus {
     }
 
     public getBusInfo(): string {
-        return this.lineName+" "+this.destinationName+" "+(this.timeToStation/60).toString();
+        return "Bus on line "+this.lineName+" towards "+this.destinationName+" is less than "+Math.ceil(this.timeToStation/60).toString()+" minutes away.";
     }
 }
