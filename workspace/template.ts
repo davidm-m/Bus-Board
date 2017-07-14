@@ -1,6 +1,8 @@
 import request = require('request');
 import readline = require('readline');
+import express = require('express');
 import { Bus } from "./bus";
+import { Stop } from "./stop";
 
 export class Template {
 
@@ -9,26 +11,27 @@ export class Template {
             input: process.stdin,
             output: process.stdout
         });
+        const app = express();
         rl.on('line', (input: string) => {
             if (input.startsWith("Print Buses ")) {
                 this.printNextBuses(input.substring(12));
             } else if (input.startsWith("Find Near ")) {
-                this.findNear(input.substring(10));
+                this.findNearAndPrint(input.substring(10));
             }
         });
+
+        app.get('/closestStops', function (req, res) {
+            const postCode: string = req.query.postcode;
+            res.send(postCode);
+        });
+        app.listen(3000, function () {
+            console.log('Listening on port 3000');
+        })
     }
 
-    private findNear(postcode: string): void {
-        const requestPromise = new Promise((resolve, reject) => {
-            request('http://api.postcodes.io/postcodes/'+postcode, function (error, response, body) {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve(body);
-                }
-            });
-        })
-        requestPromise
+    private findNearAndPrint(postCode: string): void {
+        const dataPromise: Promise<string> = this.findNear(postCode);
+        dataPromise
             .then((body)=>{
                 const longLat: number[] = this.returnLongLat(body);
                 const stopsPromise = this.getStopsPromise(longLat);
@@ -37,6 +40,37 @@ export class Template {
                     .then((body)=>this.printStopsAndBuses(body as string));
             })
             .catch((err)=>(console.log(err)));
+    }
+
+    private findNearAndMakeJson(postCode: string): JSON {
+        const dataPromise: Promise<string> = this.findNear(postCode);
+        dataPromise
+            .then((body)=>{
+                const longLat: number[] = this.returnLongLat(body);
+                const stopsPromise = this.getStopsPromise(longLat);
+                stopsPromise
+                    .catch((err)=>console.log(err))
+                    .then((body)=>{
+                        return this.makeStopJson(body);
+                    });
+            })
+    }
+
+    private makeStopJson(body: string): JSON {
+        return null;
+    }
+    
+    private findNear(postcode: string): Promise<string> {
+        const requestPromise = new Promise<string>((resolve, reject) => {
+            request('http://api.postcodes.io/postcodes/'+postcode, function (error, response, body) {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(body);
+                }
+            });
+        })        
+        return requestPromise;
     }
 
     private returnLongLat(body):number[]
