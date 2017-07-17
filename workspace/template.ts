@@ -1,6 +1,7 @@
 import request = require('request');
 import readline = require('readline');
 import express = require('express');
+import cors = require('cors');
 import { Bus } from "./bus";
 import { Stop } from "./stop";
 
@@ -12,6 +13,7 @@ export class Template {
             output: process.stdout
         });
         const app = express();
+        app.use(cors());
         rl.on('line', (input: string) => {
             if (input.startsWith("Print Buses ")) {
                 Template.printNextBuses(input.substring(12));
