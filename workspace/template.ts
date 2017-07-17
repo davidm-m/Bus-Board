@@ -24,9 +24,12 @@ export class Template {
             const postCode: string = req.query.postcode;
 
             const dataPromise = Template.findNearAndMakeJson(postCode);
-            dataPromise.then((body)=> res.send(body))
-                .catch((err)=>console.log(err));
+            dataPromise
+                .then((body)=> res.send(body))
+                .catch((err)=> console.log(err));
         });
+
+
         app.listen(3000, function () {
             console.log('Listening on port 3000');
         })
@@ -48,14 +51,16 @@ export class Template {
     private static findNearAndMakeJson(postCode: string): Promise<JSON> {
         const stopPromise = new Promise<JSON>((resolve, reject)=> {
             const findNearPromise = Template.findNear(postCode);
-            findNearPromise.then((body)=>{
-                const longLat: number[] = Template.returnLongLat(body);
-                const getStopsForLongLatPromise = Template.getStopsPromise(longLat);
-                getStopsForLongLatPromise.then((body)=> resolve(Template.makeStopJson(body)))
-                    .catch((err)=>console.log(err));
+            findNearPromise
+                .catch((err)=>console.log(err))
+                .then((body)=>{
+                    const longLat: number[] = Template.returnLongLat(body);
+                    const getStopsForLongLatPromise = Template.getStopsPromise(longLat);
+                    getStopsForLongLatPromise
+                        .then((body)=> resolve(Template.makeStopJson(body)))
+                        .catch((err)=> console.log(err));
 
-            })
-                .catch((err)=>console.log(err));
+                });
         });
         return stopPromise;
 
@@ -63,25 +68,27 @@ export class Template {
 
     private static makeStopJson(body: string): Promise<JSON> {
         const originalJSON = JSON.parse(body);
-        let returnJSON: Object[] = [];
+        let returnJSON: Stop[] = [];
         const stopJSONPromise = new Promise<JSON>((resolve,reject)=> {
             if (originalJSON.length === 0) {
                 resolve(JSON.parse(JSON.stringify(returnJSON)));
             }
             const firstStopPromise = Template.makeStopObjectPromise(originalJSON["stopPoints"][0]);
             firstStopPromise
+                .catch((err)=> console.log(err))
                 .then((stop)=>{
-                    returnJSON[0] = stop;
+                    returnJSON[0] = stop as Stop;
                     if (originalJSON.length === 1) {
                         resolve(JSON.parse(JSON.stringify(returnJSON)));
                     }
                     const secondStopPromise = Template.makeStopObjectPromise(originalJSON["stopPoints"][1]);
                     secondStopPromise
+                        .catch((err)=> console.log(err))
                         .then((secStop)=>{
-                            returnJSON[1] = secStop;
+                            returnJSON[1] = secStop as Stop;
                             resolve(JSON.parse(JSON.stringify(returnJSON)));
                         })
-                })
+                });
         })
         return stopJSONPromise;
 
@@ -91,12 +98,13 @@ export class Template {
         const stopObjectPromise: Promise<Stop> = new Promise((resolve, reject)=> {
             const busPromise = Template.getBusRequest(data["id"]);
             busPromise
+                .catch((err)=> console.log(err))
                 .then((body)=>{
-                    const buses: Bus[] = Template.parseJsonBus(body);
+                    const buses: Bus[] = Template.parseJsonBus(body as string);
                     const quickest: Bus[] = Template.quickestFive(buses);
                     const stop: Stop = new Stop(data["id"],data["commonName"],quickest,data["distance"]);
                     resolve(stop);
-                })
+                });
         });
         return stopObjectPromise;
     }
