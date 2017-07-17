@@ -51,9 +51,10 @@ export class Template {
                 stopsPromise
                     .catch((err)=>console.log(err))
                     .then((body)=>{
-                        return this.makeStopJson(body);
+                        return this.makeStopJson(body as string);
                     });
             })
+        return null;
     }
 
     private makeStopJson(body: string): JSON {
