@@ -1,4 +1,4 @@
 node_modules/
-
+!workspace/frontend/script.js
 *.js
 *.js.map
