@@ -14,54 +14,94 @@ export class Template {
         const app = express();
         rl.on('line', (input: string) => {
             if (input.startsWith("Print Buses ")) {
-                this.printNextBuses(input.substring(12));
+                Template.printNextBuses(input.substring(12));
             } else if (input.startsWith("Find Near ")) {
-                this.findNearAndPrint(input.substring(10));
+                Template.findNearAndPrint(input.substring(10));
             }
         });
 
         app.get('/closestStops', function (req, res) {
             const postCode: string = req.query.postcode;
-            res.send(postCode);
+
+            const dataPromise = Template.findNearAndMakeJson(postCode);
+            dataPromise.then((body)=> res.send(body))
+                .catch((err)=>console.log(err));
         });
         app.listen(3000, function () {
             console.log('Listening on port 3000');
         })
     }
 
-    private findNearAndPrint(postCode: string): void {
-        const dataPromise: Promise<string> = this.findNear(postCode);
+    private static findNearAndPrint(postCode: string): void {
+        const dataPromise: Promise<string> = Template.findNear(postCode);
         dataPromise
             .then((body)=>{
-                const longLat: number[] = this.returnLongLat(body);
-                const stopsPromise = this.getStopsPromise(longLat);
+                const longLat: number[] = Template.returnLongLat(body);
+                const stopsPromise = Template.getStopsPromise(longLat);
                 stopsPromise
                     .catch((err)=>console.log(err))
-                    .then((body)=>this.printStopsAndBuses(body as string));
+                    .then((body)=>Template.printStopsAndBuses(body as string));
             })
             .catch((err)=>(console.log(err)));
     }
 
-    private findNearAndMakeJson(postCode: string): JSON {
-        const dataPromise: Promise<string> = this.findNear(postCode);
-        dataPromise
-            .then((body)=>{
-                const longLat: number[] = this.returnLongLat(body);
-                const stopsPromise = this.getStopsPromise(longLat);
-                stopsPromise
-                    .catch((err)=>console.log(err))
-                    .then((body)=>{
-                        return this.makeStopJson(body as string);
-                    });
+    private static findNearAndMakeJson(postCode: string): Promise<JSON> {
+        const stopPromise = new Promise<JSON>((resolve, reject)=> {
+            const findNearPromise = Template.findNear(postCode);
+            findNearPromise.then((body)=>{
+                const longLat: number[] = Template.returnLongLat(body);
+                const getStopsForLongLatPromise = Template.getStopsPromise(longLat);
+                getStopsForLongLatPromise.then((body)=> resolve(Template.makeStopJson(body)))
+                    .catch((err)=>console.log(err));
+
             })
-        return null;
+                .catch((err)=>console.log(err));
+        });
+        return stopPromise;
+
     }
 
-    private makeStopJson(body: string): JSON {
-        return null;
+    private static makeStopJson(body: string): Promise<JSON> {
+        const originalJSON = JSON.parse(body);
+        let returnJSON: Object[] = [];
+        const stopJSONPromise = new Promise<JSON>((resolve,reject)=> {
+            if (originalJSON.length === 0) {
+                resolve(JSON.parse(JSON.stringify(returnJSON)));
+            }
+            const firstStopPromise = Template.makeStopObjectPromise(originalJSON["stopPoints"][0]);
+            firstStopPromise
+                .then((stop)=>{
+                    returnJSON[0] = stop;
+                    if (originalJSON.length === 1) {
+                        resolve(JSON.parse(JSON.stringify(returnJSON)));
+                    }
+                    const secondStopPromise = Template.makeStopObjectPromise(originalJSON["stopPoints"][1]);
+                    secondStopPromise
+                        .then((secStop)=>{
+                            returnJSON[1] = secStop;
+                            resolve(JSON.parse(JSON.stringify(returnJSON)));
+                        })
+                })
+        })
+        return stopJSONPromise;
+
+    }
+
+    private static makeStopObjectPromise(data: JSON): Promise<Stop> {
+        const stopObjectPromise: Promise<Stop> = new Promise((resolve, reject)=> {
+            const busPromise = Template.getBusRequest(data["id"]);
+            busPromise
+                .then((body)=>{
+                    const buses: Bus[] = Template.parseJsonBus(body);
+                    const quickest: Bus[] = Template.quickestFive(buses);
+                    const stop: Stop = new Stop(data["id"],data["commonName"],quickest,data["distance"]);
+                    resolve(stop);
+                })
+        });
+        return stopObjectPromise;
     }
     
-    private findNear(postcode: string): Promise<string> {
+    private static findNear(postcode: string): Promise<string> {
         const requestPromise = new Promise<string>((resolve, reject) => {
             request('http://api.postcodes.io/postcodes/'+postcode, function (error, response, body) {
                 if (error) {
@@ -74,7 +114,7 @@ export class Template {
         return requestPromise;
     }
 
-    private returnLongLat(body):number[]
+    private static returnLongLat(body):number[]
     {
         let longLat: number[] = [];
         const data = JSON.parse(body);
@@ -84,7 +124,7 @@ export class Template {
 
     }
 
-    private getStopsPromise(longLat: number[]): Promise<string>
+    private static getStopsPromise(longLat: number[]): Promise<string>
     {
         const requestPromise = new Promise<string>((resolve, reject) => {
             request('https://api.tfl.gov.uk/StopPoint?stopTypes=NaptanPublicBusCoachTram&radius=200&useStopPointHierarchy=false&modes=bus&returnLines=false&lat='+longLat[1].toString()+'&lon='+longLat[0].toString()+'&app_id=1aeb84cc&app_key=8319a3e05b400574fdc7d0db5b0d3bfb', function(error, response, body) {
@@ -99,7 +139,7 @@ export class Template {
         
     }
 
-    private printStopsAndBuses(body: string): void {
+    private static printStopsAndBuses(body: string): void {
         const data = JSON.parse(body);
         for (let i = 0; i < 2; i++) {
             if (i >= data["stopPoints"].length) {
@@ -107,35 +147,35 @@ export class Template {
                 break;
             } else {
                 const stop = data["stopPoints"][i];
-                const busPromise = this.getBusRequest(stop["id"]);
+                const busPromise = Template.getBusRequest(stop["id"]);
                 busPromise
                     .then((body) => {
                         console.log(stop["commonName"]+" at "+stop["distance"].toString()+" meters away");
-                        this.printBuses(body);
+                        Template.printBuses(body);
                     })
                     .catch((err)=>console.log(err));
             }
         }
     }
 
-    private printBuses(body: string):void{
-        const buses: Bus[] = this.parseJsonBus(body);
-        const quickest: Bus[] = this.quickestFive(buses);
+    private static printBuses(body: string):void{
+        const buses: Bus[] = Template.parseJsonBus(body);
+        const quickest: Bus[] = Template.quickestFive(buses);
         for (let i = 0; i< quickest.length; i++) {
             console.log(quickest[i].getBusInfo());
         }
     }
 
-    private printNextBuses(stopCode: string): void {
-        const busPromise = this.getBusRequest(stopCode);
+    private static printNextBuses(stopCode: string): void {
+        const busPromise = Template.getBusRequest(stopCode);
 
         busPromise
-            .then((body)=>this.printBuses(body))
+            .then((body)=>Template.printBuses(body))
             .catch((err) =>console.log(err));
         
     }
 
-    private getBusRequest(stopCode: string): Promise<string> {
+    private static getBusRequest(stopCode: string): Promise<string> {
          const requestPromise = new Promise<string> ((resolve, reject) => {
             request('https://api.tfl.gov.uk/StopPoint/'+stopCode+'/Arrivals?app_id=1aeb84cc&app_key=8319a3e05b400574fdc7d0db5b0d3bfb', function (error, response, body) {
                 if (error) {
@@ -149,7 +189,7 @@ export class Template {
         return requestPromise;
     }
 
-    private parseJsonBus(body: string): Bus[] {
+    private static parseJsonBus(body: string): Bus[] {
         const data = JSON.parse(body);
         let busList: Bus[] = [];
         for(let i = 0; i < data.length; i ++)
@@ -161,7 +201,7 @@ export class Template {
         return busList;
     }
 
-    private quickestFive(busList: Bus[]): Bus[] {
+    private static quickestFive(busList: Bus[]): Bus[] {
         let quickest: Bus[] = [];
         for (let i = 0; i < busList.length; i++) {
             if (quickest.length === 0) {
