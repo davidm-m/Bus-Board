@@ -3,9 +3,10 @@
 <head>
 
 <script>
-function getData()
+
+var intervalCaller;
+function getData(postCode)
 {
-    var postCode = document.getElementById("postCodeTextfield").value;
     console.log(postCode);
     var xhttp = new XMLHttpRequest();
 
@@ -18,6 +19,17 @@ function getData()
     xhttp.send();
 
     return xhttp.responseText;
+}
+
+function reload()
+{
+    var postcode = document.getElementById("postCodeTextfield").value;
+    if(intervalCaller != undefined) {
+        clearInterval(intervalCaller);
+    }   
+    displayData(getData(postcode));
+    intervalCaller = setInterval(function(){
+    displayData(getData(postcode))}, 30000)
 }
 
 function displayData(data) {
@@ -50,7 +62,7 @@ function displayData(data) {
 <body>
   Post Code:<br>
   <input type="text" id = "postCodeTextfield" name="postcode"  placeholder="postcode">
-   <button onclick="displayData(getData())">Try it</button> 
+   <button onclick="reload()">Try it</button> 
 
     <p id="station1"></p>
     <ul id="buslist1"></ul>

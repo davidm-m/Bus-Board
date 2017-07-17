@@ -60,11 +60,18 @@ export class Template {
             findNearPromise
                 .catch((err)=> reject(err))
                 .then((body)=>{
+                    const parsed = JSON.parse(body as string);
+                    if(parsed["status"] != 200){
+                        console.log(parsed);
+                        reject(new Error(parsed["error"]));
+                    }
+                    else{
                     const longLat: number[] = Template.returnLongLat(body);
                     const getStopsForLongLatPromise = Template.getStopsPromise(longLat);
                     getStopsForLongLatPromise
                         .then((body)=> resolve(Template.makeStopJson(body)))
                         .catch((err)=> reject(err));
+                    }
 
                 });
         });
