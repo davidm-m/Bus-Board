@@ -13,13 +13,31 @@ export class CommandLine {
         });
         console.log("Use \"Print Buses [stopcode]\" to get a list of the next five buses to that stop");
         console.log("Use \"Find Near [postcode]\" to find the nearest 2 stops to your postcode and their next five buses");
+        console.log("Use \"Route For [busId]\" to find the next stops along the bus' route");
         rl.on('line', (input: string) => {
             if (input.startsWith("Print Buses ")) {
                 CommandLine.printNextBuses(lodash.replace(input,"Print Buses ",""));
             } else if (input.startsWith("Find Near ")) {
                 CommandLine.findNearAndPrint(lodash.replace(input,"Find Near ",""));
+            } else if (input.startsWith("Route For ")) {
+                CommandLine.printBusRoute(lodash.replace(input,"Route For ",""));
             }
         });
+    }
+
+    private static printBusRoute(busId:string):void{
+        const stopsPromise: Promise<Stop[]> = RetrieveData.getRouteForBus(busId);
+        stopsPromise
+            .then((stops)=> {
+                CommandLine.printRoute(stops);
+            })
+            .catch((err) => console.log(err));
+    } 
+
+    private static printRoute(stops:Stop[]){
+        for(let i = 0; i < stops.length; i ++){
+            stops[i].printInfo();
+        }
     }
 
     private static printNextBuses(stopCode: string): void {

@@ -8,11 +8,19 @@
 
 
 <body>
-  <p id="1">Post Code:</p>
+  <div style="background: red; width: 40%"><h1 style="color: white">Bus Board</h1></div>
+  Postcode:<br>
   <input type="text" id = "postCodeTextfield" name="postcode" placeholder="postcode" onkeydown="checkSubmit(event)"/>
    <button onclick="updateBoard()">Find</button>
    <br><br> 
-    <div id="buses"></div>
+    <div style="width: 100%;">
+   <div id="buses" style="float:left; width: 40%">
+   </div>
+   <div style="float:right; width: 58%">
+     <div id="route" style="float: left"></div>
+     <div style="float: right;"></div>
+   </div>
+</div>
 </body>
 
 </html>

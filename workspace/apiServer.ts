@@ -24,6 +24,18 @@ export class ApiServer {
         });
 
 
+        app.get('/nextStops', function (req, res) {
+            const busId: string = req.query.busId;
+
+            const stopsPromise: Promise<Stop[]> = RetrieveData.getRouteForBus(busId);
+            stopsPromise
+                .then((body: Stop[])=> res.send(body))
+                .catch((err: Error)=> {
+                    console.log(err);
+                    res.send(err.toString());
+                });
+        });
+
         app.listen(3000, function () {
             console.log('Listening on port 3000');
         })

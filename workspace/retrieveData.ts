@@ -3,6 +3,22 @@ import { Bus } from "./bus";
 import { Stop } from "./stop";
 
 export class RetrieveData {
+    public static getRouteForBus(busId: string): Promise<Stop[]>
+    {
+        const StopPromise: Promise<Stop[]> = new Promise<Stop[]>((resolve, reject)=> {
+             request('https://api.tfl.gov.uk/Vehicle/' + busId + '/Arrivals', (error, response, body) => {
+                if(error){
+                    reject(error);
+                }
+                else {
+                    const parsed: Object[] = JSON.parse(body);
+                    resolve(RetrieveData.getStopsFromData(parsed));
+                }
+             });
+        });
+        return StopPromise;
+    }
+
     public static getSoonestFive(stopcode: string): Promise<Bus[]> {
         const busPromise: Promise<Bus[]> = new Promise<Bus[]>((resolve, reject)=> {
             const dataPromise:Promise<string> = RetrieveData.getBusRequest(stopcode);
@@ -31,6 +47,16 @@ export class RetrieveData {
                 .catch((err: Error)=> reject(err));
         });
         return stopsPromise;
+    }
+
+    private static getStopsFromData(body:Object[]):Stop[]
+    {
+        let stopList: Stop[] = [];
+        for(let i =0; i < body.length; i++){
+            const stop = new Stop(body[i]["naptanId"], body[i]["stationName"]);
+            stopList[i] = stop;
+        }
+        return stopList;
     }
 
     private static getLongLatPromise(postcode: string): Promise<number[]> {

@@ -1,22 +1,43 @@
-table, th, td {
-    border: 1px solid blue;
-    animation-name: slidein;
-    animation-duration: 32s;
-    opacity: 0.0;
-    animation-iteration-count: 1;
+html * {
+    font-family: Rockwell;
 }
 
-p {
-    animation-duration: 1s;
-    animation-iteration-count: infinite;
+table {    
+    animation-name: slidein;
+    animation-duration: 30s;
+    opacity: 0.0;
+    animation-iteration-count: 1;
+    border-collapse: collapse;
+}
+
+#mytable {
+    text-align: left;
+ }
+#mytable .line { width: 50px; }
+#mytable .towards { width: 300px; }
+#mytable .destination { width: 200px; }
+#mytable .time {
+    text-align: right;
+    width: 70px;
+}
+#mytable .route {
+    width: 70px;
+    text-align: center;
 }
 
 @keyframes slidein {
     from { margin-left: 10%;
             opacity: 1.0; }
-    3% { margin-left: 0%; }
+    6% { margin-left: 0%; }
     92% {margin-left: 0%;
         opacity: 1.0;}
+    to { opacity: 0.0; }
+}
+
+@keyframes slider {
+    from { opacity: 0.0; }
+    6% { opacity: 1.0; }
+    92% { opacity: 1.0; }
     to { opacity: 0.0; }
 }
 
