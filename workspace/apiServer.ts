@@ -1,6 +1,7 @@
 import * as express from 'express';
 import * as request from 'request';
 import * as cors from 'cors';
+import * as path from 'path';
 import { Bus } from "./bus";
 import { Stop } from "./stop";
 import { RetrieveData } from "./retrieveData";
@@ -9,8 +10,12 @@ export class ApiServer {
     public static startListening() {
         const app = express();
         app.use(cors());
+        app.use('/', express.static(path.join(__dirname,"./frontend")));
 
-
+        app.get('/', function (req, res) {
+            res.send("Hello World!");
+        })
+        
         app.get('/closestStops', function (req, res) {
             const postCode: string = req.query.postcode;
 
@@ -22,7 +27,6 @@ export class ApiServer {
                     res.send(err.toString());
                 });
         });
-
 
         app.get('/nextStops', function (req, res) {
             const busId: string = req.query.busId;
@@ -36,8 +40,10 @@ export class ApiServer {
                 });
         });
 
-        app.listen(3000, function () {
-            console.log('Listening on port 3000');
+        
+        const port = process.env.PORT || 3000;
+        app.listen(port, function () {
+            console.log('Listening on port ' + port);
         })
     }
 }
