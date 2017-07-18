@@ -5,11 +5,11 @@ function getDataForPostCode(postCode)
 {
     var xhttp = new XMLHttpRequest();
 
-    xhttp.open("GET", "http://localhost:3000/closestStops?postcode="+postCode, false);
+    xhttp.open("GET", "/closestStops?postcode="+postCode, false);
 
     xhttp.setRequestHeader("Content-type", "application/json");
     xhttp.setRequestHeader('Access-Control-Allow-Headers', '*');
-    xhttp.setRequestHeader("Access-Control-Allow-Origin", 'http://localhost:3000');
+    xhttp.setRequestHeader("Access-Control-Allow-Origin", '*');
 
     xhttp.send();
 
@@ -20,11 +20,11 @@ function getDataForBus(busId)
 {
     var xhttp = new XMLHttpRequest();
 
-    xhttp.open("GET", "http://localhost:3000/nextStops?busId="+busId, false);
+    xhttp.open("GET", "/nextStops?busId="+busId, false);
 
     xhttp.setRequestHeader("Content-type", "application/json");
     xhttp.setRequestHeader('Access-Control-Allow-Headers', '*');
-    xhttp.setRequestHeader("Access-Control-Allow-Origin", 'http://localhost:3000');
+    xhttp.setRequestHeader("Access-Control-Allow-Origin", '*');
 
     xhttp.send();
 

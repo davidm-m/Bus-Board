@@ -11,10 +11,6 @@ export class ApiServer {
         const app = express();
         app.use(cors());
         app.use('/', express.static(path.join(__dirname,"./frontend")));
-
-        app.get('/', function (req, res) {
-            res.send("Hello World!");
-        })
         
         app.get('/closestStops', function (req, res) {
             const postCode: string = req.query.postcode;
