@@ -16,7 +16,7 @@ function getData(postCode)
     return xhttp.responseText;
 }
 
-function reload()
+function updateBoard()
 {
     var postcode = document.getElementById("postCodeTextfield").value;
     if(intervalCaller != undefined) {
@@ -49,4 +49,11 @@ function displayData(data) {
         }
     }
     document.getElementById("buses").innerHTML = tables;
+}
+
+function checkSubmit(event)
+{
+    if(event.keyCode== 13){
+        updateBoard();
+    }
 }

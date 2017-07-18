@@ -8,9 +8,9 @@
 
 
 <body>
-  Post Code:<br>
-  <input type="text" id = "postCodeTextfield" name="postcode"  placeholder="postcode">
-   <button onclick="reload()">Find</button>
+  <p id="1">Post Code:</p>
+  <input type="text" id = "postCodeTextfield" name="postcode" placeholder="postcode" onkeydown="checkSubmit(event)"/>
+   <button onclick="updateBoard()">Find</button>
    <br><br> 
     <div id="buses"></div>
 </body>

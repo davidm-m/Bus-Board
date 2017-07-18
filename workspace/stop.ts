@@ -1,15 +1,16 @@
 import { Bus } from './bus';
 
 export class Stop {
-    private id: string;
-    private commonName: string;
-    private nextBuses: Bus[];
-    private distance: number;
+    
+    constructor (private id: string,private commonName: string,private nextBuses: Bus[],private distance:number) {
+    }
 
-    constructor (id: string,commonName: string,nextBuses: Bus[],distance:number) {
-        this.id = id;
-        this.commonName = commonName;
-        this.nextBuses = nextBuses;
-        this.distance = distance;
+    public getListOfBuses():Bus[]{
+        return this.nextBuses;
+    }
+
+    public printInfo():void
+    {
+        console.log(this.commonName+" at "+this.distance.toString()+" meters away:");          
     }
 }
