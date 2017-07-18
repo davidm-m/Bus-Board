@@ -4,7 +4,8 @@
   "description": "basic template for ts coding challenges",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "tsc -p . && node index.js"
   },
   "author": "tal",
   "license": "ISC",
@@ -17,6 +18,8 @@
     "cors": "^2.8.4",
     "express": "^4.15.3",
     "lodash": "^4.17.4",
-    "request": "^2.81.0"
+    "request": "^2.81.0",
+    "tsc": "^1.20150623.0",
+    "typescript": "^2.4.1"
   }
 }
