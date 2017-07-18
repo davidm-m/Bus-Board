@@ -29,6 +29,8 @@ export class Bus {
         this.towards = towards;
     }
 
+    
+
     public getTimeToStation(): number {
         return this.timeToStation;
     }
